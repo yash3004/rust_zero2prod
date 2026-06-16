@@ -1,18 +1,9 @@
-use actix_web::{App, HttpRequest, HttpServer, Responder, web};
-
-async fn greet(req: HttpRequest) -> impl Responder {
-    let name = req.match_info().get("name").unwrap_or("World");
-    format!("Hello, {}!", name)
-}
+use zero2prod::configurations::get_configuration;
+use zero2prod::run;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-        .route("/", web::get().to(greet))
-        .route("/{name}", web::get().to(greet))
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
-} 
+    let app_config = get_configuration().expect("Failed to read configuration").application;
+    let listener = std::net::TcpListener::bind(format!("{}:{}", app_config.host, app_config.port))?;
+    run(listener)?.await
+}
