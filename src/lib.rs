@@ -1,11 +1,13 @@
 pub mod configurations;
+pub mod schemas;
+pub mod operations;
 
 use actix_web::dev::Server;
-use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use actix_web::{App, HttpResponse, HttpServer, web};
 use std::net::TcpListener;
 
-async fn health_check() -> impl Responder {
-    web::Json(serde_json::json!({"status": "ok"}))
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().json(serde_json::json!({"status": "ok"}))
 }
 
 #[derive(serde::Deserialize)]
@@ -14,11 +16,11 @@ struct FormData {
     email: String,
 }
 
-async fn subscribe(_form: web::Form<FormData>) -> impl Responder {
+async fn subscribe(_form: web::Form<FormData>) -> HttpResponse {
     if _form.name.is_empty() && _form.email.is_empty() {
         return HttpResponse::BadRequest().finish();
     }
-    HttpResponse::Ok().finish()
+    HttpResponse::Ok().json(serde_json::json!({"message": format!("Welcome {} to the newsletter!", _form.name)}))
 }
 
 pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
